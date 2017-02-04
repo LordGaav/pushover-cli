@@ -54,8 +54,7 @@ SOUNDS = [
 ]
 LEVELS = [-2, -1, 0, 1, 2]
 
-parser = ArgumentParser(description="Send notifications using Pushover "
-                                    "for Zabbix")
+parser = ArgumentParser(description="Send notifications using Pushover")
 parser.add_argument("--token", help="Application token.", required=True)
 parser.add_argument("--user", help="User destination token.", required=True)
 parser.add_argument("--device", help="Device name to target specifically, "
