@@ -85,8 +85,6 @@ del attachment['message']
 
 message['attachments'] = [attachment]
 
-print(message)
-
 payload = {"payload": json.dumps(message)}
 
 try:
