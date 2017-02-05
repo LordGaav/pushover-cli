@@ -1,9 +1,10 @@
-# notification scripts
+notification scripts
+====================
 Standalone scripts for sending notifications from the CLI.
 
 All are written for Python 3.4 and have no dependencies.
 
 Current services:
 
-* [Pushover](http://pushover.net)
-* [Slack](https://slack.com)
+* `Pushover <http://pushover.net>`_
+* `Slack <https://slack.com>`_
