@@ -60,16 +60,16 @@ ISO8601 = r"^(\d{4})-?(\d{2})-?(\d{2})?[T ]?(\d{2}):?(\d{2}):?(\d{2})"
 
 
 def iso8601_to_unix_timestamp(value):
+    matches = re.match(ISO8601, value)
+    if matches:
+        return int(datetime.datetime(
+            *[int(m) for m in matches.groups()]).timestamp())
+
     try:
         return int(value)
     except ValueError:
-        pass
-    matches = re.match(ISO8601, value)
-    if not matches:
         raise ArgumentTypeError("Argument is not a valid UNIX or ISO8601 "
                                 "timestamp.")
-    return int(datetime.datetime(
-        *[int(m) for m in matches.groups()]).timestamp())
 
 
 def arguments():
