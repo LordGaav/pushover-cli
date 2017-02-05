@@ -20,7 +20,9 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentTypeError
+import datetime
+import re
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -54,6 +56,22 @@ SOUNDS = [
 ]
 LEVELS = [-2, -1, 0, 1, 2]
 
+ISO8601 = r"^(\d{4})-?(\d{2})-?(\d{2})?[T ]?(\d{2}):?(\d{2}):?(\d{2})"
+
+
+def iso8601_to_unix_timestamp(value):
+    try:
+        return int(value)
+    except ValueError:
+        pass
+    matches = re.match(ISO8601, value)
+    if not matches:
+        raise ArgumentTypeError("Argument is not a valid UNIX or ISO8601 "
+                                "timestamp.")
+    return int(datetime.datetime(
+        *[int(m) for m in matches.groups()]).timestamp())
+
+
 parser = ArgumentParser(description="Send notifications using Pushover")
 parser.add_argument("--token", help="Application token.", required=True)
 parser.add_argument("--user", help="User destination token.", required=True)
@@ -66,7 +84,8 @@ parser.add_argument("--priority", help="Notification priority.", type=int,
 parser.add_argument("--url", help="Supplementary URL.")
 parser.add_argument("--url_title", help="Supplementary URL title.")
 parser.add_argument("--timestamp", help="Unix timestamp or ISO8601 timestamp "
-                    "(will be converted to Unix timestamp).")
+                    "(will be converted to Unix timestamp).",
+                    type=iso8601_to_unix_timestamp)
 parser.add_argument("--retry", help="Retry message every x seconds. Only "
                     "used when priority is 2.", type=int, default=30)
 parser.add_argument("--expire", help="Expire message after x seconds. Only "

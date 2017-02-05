@@ -41,7 +41,8 @@ def iso8601_to_unix_timestamp(value):
     if not matches:
         raise ArgumentTypeError("Argument is not a valid UNIX or ISO8601 "
                                 "timestamp.")
-    return datetime.datetime(*[int(m) for m in matches.groups()]).timestamp()
+    return int(datetime.datetime(
+        *[int(m) for m in matches.groups()]).timestamp()
 
 
 def hex_value(value):
