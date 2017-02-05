@@ -52,46 +52,61 @@ def hex_value(value):
     return value
 
 
-parser = ArgumentParser(description="Send notifications using Slack")
-parser.add_argument("--webhook-url", help="Webhook URL.", required=True)
-parser.add_argument("--channel", help="Channel to post to (prefixed with #), "
-                    "or a specific user (prefixed with @).")
-parser.add_argument("--username", help="Username to post as")
-parser.add_argument("--title", help="Notification title.")
-parser.add_argument("--title_link", help="Notification title link.")
-parser.add_argument("--color", help="Sidebar color (as a hex value).",
-                    type=hex_value)
-parser.add_argument("--ts", help="Unix timestamp or ISO8601 timestamp "
-                    "(will be converted to Unix timestamp).",
-                    type=iso8601_to_unix_timestamp)
-parser.add_argument("message", help="Notification message.")
+def arguments():
+    parser = ArgumentParser(description="Send notifications using Slack")
+    parser.add_argument("--webhook-url", help="Webhook URL.", required=True)
+    parser.add_argument("--channel", help="Channel to post to (prefixed with "
+                        "#), or a specific user (prefixed with @).")
+    parser.add_argument("--username", help="Username to post as")
+    parser.add_argument("--title", help="Notification title.")
+    parser.add_argument("--title_link", help="Notification title link.")
+    parser.add_argument("--color", help="Sidebar color (as a hex value).",
+                        type=hex_value)
+    parser.add_argument("--ts", help="Unix timestamp or ISO8601 timestamp "
+                        "(will be converted to Unix timestamp).",
+                        type=iso8601_to_unix_timestamp)
+    parser.add_argument("message", help="Notification message.")
 
-args = parser.parse_args()
+    return parser.parse_args()
 
-message = {}
 
-for param in ["channel", "username"]:
-    value = getattr(args, param)
-    if value:
-        message[param] = value
+def format_payload(args):
+    message = {}
 
-attachment = {}
-for param in ["title", "title_link", "color", "ts", "message"]:
-    value = getattr(args, param)
-    if value:
-        attachment[param] = value
-attachment['fallback'] = attachment['message']
-attachment['text'] = attachment['message']
-del attachment['message']
+    for param in ["channel", "username"]:
+        value = getattr(args, param)
+        if value:
+            message[param] = value
 
-message['attachments'] = [attachment]
+    attachment = {}
+    for param in ["title", "title_link", "color", "ts", "message"]:
+        value = getattr(args, param)
+        if value:
+            attachment[param] = value
+    attachment['fallback'] = attachment['message']
+    attachment['text'] = attachment['message']
+    del attachment['message']
 
-payload = {"payload": json.dumps(message)}
+    message['attachments'] = [attachment]
+    payload = urllib.parse.urlencode({"payload": json.dumps(message)})\
+                          .encode('UTF-8')
+    return payload
 
-try:
-    parameters = urllib.parse.urlencode(payload).encode('UTF-8')
-    url = urllib.request.Request(args.webhook_url, parameters)
-    responseData = urllib.request.urlopen(url).read()
-except urllib.error.HTTPError as he:
-    print("Sending message to Slack failed: {}".format(he))
-    sys.exit(1)
+
+def send_message(args, payload):
+    try:
+        url = urllib.request.Request(args.webhook_url, payload)
+        urllib.request.urlopen(url).read()
+    except urllib.error.HTTPError as he:
+        print("Sending message to Slack failed: {}".format(he))
+        sys.exit(1)
+
+
+def main():
+    args = arguments()
+    payload = format_payload(args)
+    send_message(args, payload)
+
+
+if __name__ == "__main__":
+    main()
