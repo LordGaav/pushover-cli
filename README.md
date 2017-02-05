@@ -1,4 +1,8 @@
-# pushover-cli
-Simple CLI script for sending notifications using Pushover
+# notification scripts
+Standalone scripts for sending notifications from the CLI.
 
-Written for Python 3.4 and has no dependencies.
+All are written for Python 3.4 and have no dependencies.
+
+Current services:
+
+* [Pushover](http://pushover.net)
