@@ -60,52 +60,72 @@ ISO8601 = r"^(\d{4})-?(\d{2})-?(\d{2})?[T ]?(\d{2}):?(\d{2}):?(\d{2})"
 
 
 def iso8601_to_unix_timestamp(value):
+    matches = re.match(ISO8601, value)
+    if matches:
+        return int(datetime.datetime(
+            *[int(m) for m in matches.groups()]).timestamp())
+
     try:
         return int(value)
     except ValueError:
-        pass
-    matches = re.match(ISO8601, value)
-    if not matches:
         raise ArgumentTypeError("Argument is not a valid UNIX or ISO8601 "
                                 "timestamp.")
-    return int(datetime.datetime(
-        *[int(m) for m in matches.groups()]).timestamp())
 
 
-parser = ArgumentParser(description="Send notifications using Pushover")
-parser.add_argument("--token", help="Application token.", required=True)
-parser.add_argument("--user", help="User destination token.", required=True)
-parser.add_argument("--device", help="Device name to target specifically, "
-                    "may contain more than one separated by comma's.")
-parser.add_argument("--title", help="Notification title.")
-parser.add_argument("--sound", help="Play a specific sound.", choices=SOUNDS)
-parser.add_argument("--priority", help="Notification priority.", type=int,
-                    choices=LEVELS, default=0)
-parser.add_argument("--url", help="Supplementary URL.")
-parser.add_argument("--url_title", help="Supplementary URL title.")
-parser.add_argument("--timestamp", help="Unix timestamp or ISO8601 timestamp "
-                    "(will be converted to Unix timestamp).",
-                    type=iso8601_to_unix_timestamp)
-parser.add_argument("--retry", help="Retry message every x seconds. Only "
-                    "used when priority is 2.", type=int, default=30)
-parser.add_argument("--expire", help="Expire message after x seconds. Only "
-                    "used when priority is 2.", type=int, default=300)
-parser.add_argument("message", help="Notification message.")
+def arguments():
+    parser = ArgumentParser(description="Send notifications using Pushover")
+    parser.add_argument("--token", help="Application token.", required=True)
+    parser.add_argument("--user", help="User destination token.",
+                        required=True)
+    parser.add_argument("--device", help="Device name to target specifically, "
+                        "may contain more than one separated by comma's.")
+    parser.add_argument("--title", help="Notification title.")
+    parser.add_argument("--sound", help="Play a specific sound.",
+                        choices=SOUNDS)
+    parser.add_argument("--priority", help="Notification priority.", type=int,
+                        choices=LEVELS, default=0)
+    parser.add_argument("--url", help="Supplementary URL.")
+    parser.add_argument("--url_title", help="Supplementary URL title.")
+    parser.add_argument("--timestamp", help="Unix timestamp or ISO8601 "
+                        "timestamp (will be converted to Unix timestamp).",
+                        type=iso8601_to_unix_timestamp)
+    parser.add_argument("--retry", help="Retry message every x seconds. Only "
+                        "used when priority is 2.", type=int, default=30)
+    parser.add_argument("--expire", help="Expire message after x seconds. "
+                        "Only used when priority is 2.", type=int, default=300)
+    parser.add_argument("message", help="Notification message.")
 
-args = parser.parse_args()
+    args = parser.parse_args()
 
-if args.retry < 30:
-    args.retry = 30
+    if args.retry < 30:
+        args.retry = 30
 
-parameters = {}
-for param, value in vars(args).items():
-    if value:
-        parameters[param] = value
+    return args
 
-try:
-    parameters = urllib.parse.urlencode(parameters).encode('UTF-8')
-    url = urllib.request.Request(PUSHOVER_URL, parameters)
-    responseData = urllib.request.urlopen(url).read()
-except urllib.error.HTTPError as he:
-    print("Sending message to Pushover failed: {}".format(he))
-    sys.exit(1)
+
+def format_payload(args):
+    parameters = {}
+    for param, value in vars(args).items():
+        if value:
+            parameters[param] = value
+    payload = urllib.parse.urlencode(parameters).encode('UTF-8')
+    return payload
+
+
+def send_message(payload):
+    try:
+        url = urllib.request.Request(PUSHOVER_URL, payload)
+        urllib.request.urlopen(url).read()
+    except urllib.error.HTTPError as he:
+        print("Sending message to Pushover failed: {}".format(he))
+        sys.exit(1)
+
+
+def main():
+    args = arguments()
+    payload = format_payload(args)
+    send_message(payload)
+
+
+if __name__ == "__main__":
+    main()
