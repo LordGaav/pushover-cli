@@ -20,15 +20,17 @@
 # DEALINGS IN THE SOFTWARE.
 
 from argparse import ArgumentTypeError
+from datetime import datetime
 from notification_scripts import slack, pushover
 import nose.tools
 
 
 ISO8601_TIMESTAMPS = [
-    ("2016-01-01T11:22:33", 1451643753, None),
-    ("20160101T11:22:33", 1451643753, None),
-    ("20160101 112233", 1451643753, None),
-    ("20160101112233", 1451643753, None),
+    ("2016-01-01T11:22:33", datetime(2016, 1, 1, 11, 22, 33).timestamp(),
+     None),
+    ("20160101T11:22:33", datetime(2016, 1, 1, 11, 22, 33).timestamp(), None),
+    ("20160101 112233", datetime(2016, 1, 1, 11, 22, 33).timestamp(), None),
+    ("20160101112233", datetime(2016, 1, 1, 11, 22, 33).timestamp(), None),
     ("123", 123, None),
 
     (345, 345, TypeError),  # Must supply a string
